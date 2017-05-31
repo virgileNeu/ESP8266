@@ -87,7 +87,7 @@ void WIFI_get_amount_data(esp8266_dev *dev, char *data, uint32_t amount);
 
 int WIFI_get_all_data(esp8266_dev *dev, char *data);
 
-int WIFI_get_data_terminator(esp8266_dev *dev, char *data, uint32_t max);
+int WIFI_get_data_terminator(esp8266_dev *dev, char *data);
 
 void WIFI_reset_FIFO(esp8266_dev *dev, uint32_t val);
 

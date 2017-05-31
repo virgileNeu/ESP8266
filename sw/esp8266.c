@@ -334,11 +334,14 @@ int WIFI_get_all_data(esp8266_dev *dev, char *data) {
  * example: char data[100]; int read = WIFI_get_data_terminator(&dev, data);
  * read = amout of char read, data[0..read-1] = data received
  */
-int WIFI_get_data_terminator(esp8266_dev *dev, char *data, uint32_t max) {
+int WIFI_get_data_terminator(esp8266_dev *dev, char *data) {
 	int r = 0;
-	char c = '0', last = '0', tmp = '0';
-	for(int i = 0; i < max && (last != '\r' || c != '\n'); ++i) {
-		while(WIFI_get_data_safe(dev, &tmp) < 0) {}
+	int i = -1;
+	char c = '0', last = '0', tmp;
+	while(last != '\r' || c != '\n') {
+		do {
+			i = WIFI_get_data_safe(dev, &tmp);
+		} while(i == -1);
 		last = c;
 		c = tmp;
 		data[r] = tmp;
