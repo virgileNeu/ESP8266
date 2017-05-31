@@ -33,7 +33,9 @@ int main() {
 		if(!strncmp(s, "exit", 4)) {
 			loop = 0;
 		} else {
-			WIFI_send_command(&esp8266, s, strnlen(s, 1000));
+			if(strnlen(s, 1000)>3) {
+				WIFI_send_command(&esp8266, s, strnlen(s, 1000));
+			}
 			printf("\nEnter string for response");
 			scanf("%s", s);
 			WIFI_get_all_data(&esp8266, s);
