@@ -30,10 +30,10 @@ int main() {
 	i2c_pio_writebit(&pio, BIT_WIFI_PD_CH, 1);
 	i2c_pio_writebit(&pio, BIT_WIFI_RESETn, 1);
 
-	WIFI_set_CTRL(&esp8266, WIFI_UART_ON | WIFI_STOP_0);
-	WIFI_set_baud_rate(&esp8266, b115200);
 
 	usleep(1000000);
+	WIFI_set_CTRL(&esp8266, WIFI_UART_ON | WIFI_STOP_0);
+	WIFI_set_baud_rate(&esp8266, b115200);
 	WIFI_reset_FIFO(&esp8266, WIFI_RESET_FIFO_IN | WIFI_RESET_FIFO_OUT);
 
 	//commands to connect the client
@@ -48,18 +48,17 @@ int main() {
 		return -1;
 	}
 	WIFI_send_command(&esp8266, "AT+CWMODE=3", 11); //allow softAP + station
-	WIFI_get_data_terminator(&esp8266, message); //the answer
-	if(strncmp(message, "OK", 2)) {
-		printf("UART command not ok\n");
-		return -1;
-	}
+	do {
+		WIFI_get_data_terminator(&esp8266, message);
+		printf("%s",message);
+	} while(strncmp(message, "OK", 2));
 
-	WIFI_send_command(&esp8266, "AT+CIPMUX=0", 11); //single connection
-	WIFI_get_data_terminator(&esp8266, message); //the answer
-	if(strncmp(message, "OK", 2)) {
-		printf("UART command not ok\n");
-		return -1;
-	}
+
+	WIFI_send_command(&esp8266, "AT+CIPMUX=0", 11); //single connection (client)
+	do {
+		WIFI_get_data_terminator(&esp8266, message);
+		printf("%s",message);
+	} while(strncmp(message, "OK", 2));
 
 	char ssid[100], pass[100];
 	printf("SSID?");
@@ -68,29 +67,28 @@ int main() {
 	scanf("%s", pass);
 	sprintf(message, "AT+CWJAP=\"%s\",\"%s\"", ssid, pass);
 	WIFI_send_command(&esp8266, message, strnlen(message, 1000)); //connect to router
-	WIFI_get_data_terminator(&esp8266, message); //the answer
-	if(strncmp(message, "OK", 2)) {
-		printf("UART command not ok\n");
-		return -1;
-	}
+	do {
+		WIFI_get_data_terminator(&esp8266, message);
+		printf("%s",message);
+	} while(strncmp(message, "OK", 2));
 
 	char ip[100];
 	printf("IP?");
 	scanf("%s", ip);
 	sprintf(message, "AT+CIPSTART=\"TCP\",\"%s\",333", ip);
 	WIFI_send_command(&esp8266, message, strnlen(message, 1000)); //connect to server
-	WIFI_get_data_terminator(&esp8266, message); //the answer
-	if(strncmp(message, "OK", 2)) {
-		printf("UART command not ok\n");
-		return -1;
-	}
+	do {
+		WIFI_get_data_terminator(&esp8266, message);
+		printf("%s",message);
+	} while(strncmp(message, "OK", 2));
 
-	WIFI_send_command(&esp8266, "AT+CIPMODE=1", 12); //single connection
-	WIFI_get_data_terminator(&esp8266, message); //the answer
-	if(strncmp(message, "OK", 2)) {
-		printf("UART command not ok\n");
-		return -1;
-	}
+
+	WIFI_send_command(&esp8266, "AT+CIPMODE=1", 12); //transparent comm on
+	do {
+		WIFI_get_data_terminator(&esp8266, message);
+		printf("%s",message);
+	} while(strncmp(message, "OK", 2));
+	WIFI_send_command(&esp8266, "AT+CIPSEND", 10); //start comm
 
 	printf("PRESS RIGHT JOY TO START, LEFT TO PAUSE, BOTH TO STOP\n");
 	printf("LEFT-JOY Y AXIS for BLUE\nRIGHT-JOY Y AXIS for RED\nRIGHT-JOY X AXIS for GREEN\n");
@@ -100,23 +98,25 @@ int main() {
 	int loop = 1;
 	int stop = 1;
 	while(loop) {
-		usleep(50000);
+		usleep(10000);
+		WIFI_get_all_data(&esp8266, message);
+		printf("%s", message);
 		if(stop) {
 			i2c_pio_writebit(&pio, BIT_J0SWRn, 1);
 			i2c_pio_writebit(&pio, BIT_J1SWRn, 1);
 			if(!i2c_pio_readbit(&pio, BIT_J1SWRn) && !i2c_pio_readbit(&pio, BIT_J0SWRn)) {
-				WIFI_send_command(&esp8266, "AT+CIPSEND=5", 12);
+				//WIFI_send_command(&esp8266, "AT+CIPSEND=5", 12);
 				WIFI_send_message(&esp8266, "OFF\r\n", 5);
 				loop = 0;
 			} else if(!i2c_pio_readbit(&pio, BIT_J1SWRn)){
-				WIFI_send_command(&esp8266, "AT+CIPSEND=7", 12);
+				//WIFI_send_command(&esp8266, "AT+CIPSEND=7", 12);
 				WIFI_send_message(&esp8266, "START\r\n", 7);
 				stop = 0;
 			}
 		} else {
 			i2c_pio_writebit(&pio, BIT_J0SWRn, 1);
 			if(!i2c_pio_readbit(&pio, BIT_J0SWRn)) { //joy 0 pressed3
-				WIFI_send_command(&esp8266, "AT+CIPSEND=6", 12);
+				//WIFI_send_command(&esp8266, "AT+CIPSEND=6", 12);
 				WIFI_send_message(&esp8266, "STOP\r\n", 6);
 				stop = 1;
 			}
@@ -125,15 +125,22 @@ int main() {
 			uint32_t r = mcp3204_read(&mcp, 0) >> 4;
 			uint32_t g = mcp3204_read(&mcp, 1) >> 4;
 			uint32_t b = mcp3204_read(&mcp, 2) >> 4;
-			//send red
-			sprintf(message, "R%" PRIu32 "\r\n", r);
-			WIFI_send_message(&esp8266, message, strnlen(message, 100));
-			//send green
-			sprintf(message, "G%" PRIu32 "\r\n", g);
+			//send rgb
+			sprintf(message, "R%03" PRIu32 "\r\nG%03" PRIu32 "\r\nB%03" PRIu32 "\r\n", r,g,b);
+			//WIFI_send_command(&esp8266, "AT+CIPSEND=XXXXXXX", 12);
+			WIFI_send_message(&esp8266, message, 18);
+			/*do {
+				WIFI_get_data_terminator(&esp8266, message);
+				printf("%s",message);
+			} while(strncmp(message, "SEND OK", 7));*/
+			/*//send green
+			sprintf(message, "G%03" PRIu32 "\r\n", g);
+			WIFI_send_command(&esp8266, "AT+CIPSEND=6", 12);
 			WIFI_send_message(&esp8266, message, strnlen(message, 100));
 			//send blue
-			sprintf(message, "B%" PRIu32 "\r\n", b);
-			WIFI_send_message(&esp8266, message, strnlen(message, 100));
+			sprintf(message, "B%03" PRIu32 "\r\n", b);
+			WIFI_send_command(&esp8266, "AT+CIPSEND=6", 12);
+			WIFI_send_message(&esp8266, message, strnlen(message, 100));*/
 		}
 	}
 	printf("DONE");
