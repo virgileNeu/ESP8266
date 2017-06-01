@@ -11,6 +11,8 @@
 \usepackage{multirow}
 \usepackage{pdfpages}
 \usepackage[titletoc,toc]{appendix}
+\usepackage[hidelinks]{hyperref}
+
 \usepackage{fancyhdr}
 \usepackage{amsmath}
 \usepackage{subcaption}
@@ -57,8 +59,8 @@
 \section{Introduction}
 
 The ESP8266 chip is a WiFi module with a AT command mode. It can be used for 
-single connection or multiple connections (server).
-It has 4 pins of interest plus VCC and GND : Chip Enable, RESET, Rx and Tx. The picture \ref{esp8266} below show the esp8266 board with it's connectivity.
+single connection or multiple connections (server), either TCP or UDP.\\
+It has 4 pins of interest plus \texttt{VCC} and \texttt{GND} : \texttt{Chip Enable}, \texttt{RESET}, \texttt{Rx} and \texttt{Tx}. The picture \ref{esp8266} below show the esp8266 board with it's connectivity.
 \begin{figure}[H]
 \centering
 \begin{subfigure}{.7\textwidth}
@@ -74,20 +76,14 @@ It has 4 pins of interest plus VCC and GND : Chip Enable, RESET, Rx and Tx. The 
 \label{esp8266}
 \end{figure}
 
-The goal is to make available this WiFi module to use on the FPGA and to make it easily usable. Figure \ref{uses_flowchart} depicts how to use it from the CPU point of view.
-
-\begin{figure}[H]
-        \makebox[\textwidth][c]{\includegraphics[width=0.9\textwidth,height=0.9\textheight,keepaspectratio]{EPFL-Logo-CMJN.eps}}
-        \caption{Uses flowchart seen by the CPU.}
-        \label{uses_flowchart}
-\end{figure}
+The goal is to make available this WiFi module to use on the FPGA and to make it easily usable.
 \newpage
 \section{Parameters}
 \subsection{Default configuration}
-The default configuration depends on the firmware version and can be changed at any time by AT commands (e.g. AT+UART_DEF).
-
+The default configuration depends on the firmware version and can be changed at any time by AT commands with the \texttt{\_DEF} modifier (e.g. \texttt{AT+UART\_DEF}).\\
+Most of the parameters can be set that way, or customise at run time without changing the stored settings with the \texttt{\_CUR} command modifier.
 \subsection{Serial Parameters}
-The ESP8266 WiFi module uses UART communication to transmit information with the FPGA.\\
+The ESP8266 WiFi module uses \texttt{UART} communication to transmit information with the FPGA.\\
 The UART works as described on figure \ref{UART_data_transfert}. It starts with the start bit, always '0', then comes the data (here 8 bits), least significant bit first, then the parity bit (if set), and then 1 or 2 stop bit, always '1'.\\
 The ESP8266 supports a lot of different settings :
 \begin{figure}[H]
@@ -101,7 +97,7 @@ The ESP8266 supports a lot of different settings :
     \item 5 bits
     \item 6 bits
     \item 7 bits
-    \item 8 bits (only one supported by hardware)
+    \item 8 bits
 \end{itemize}
 \subsubsection{Baud rates}
 Unlike the HC05, it supports a continuous range of baud rates, between 300 to 115200*40 bits/s.
@@ -109,55 +105,54 @@ Unlike the HC05, it supports a continuous range of baud rates, between 300 to 11
 \subsubsection{Stop bit}
 \begin{itemize}
     \item 1 bit
-    \item 1.5 bit (not supported by hardware module)
+    \item 1.5 bit
     \item 2 bit
 \end{itemize}
 
 \subsubsection{Parity bit}
 \begin{itemize}
     \item None
-    \item Odd parity
-    \item Event parity
+    \item \texttt{Odd} parity
+    \item \texttt{Event} parity
 \end{itemize}
 
 \subsubsection{Flow control}
 \begin{itemize}
     \item No flow control
-    \item enable Request To Send
-    \item enable Clear To Send
-    \item enable both RTS and CTS
+    \item enable \texttt{Request To Send}
+    \item enable \texttt{Clear To Send}
+    \item enable both \texttt{RTS} and \texttt{CTS}
 \end{itemize}
 
-The ESP8266 has on chip tx/rx FIFO of 128 Bytes.
+The ESP8266 has on chip \texttt{Tx/Rx} FIFO of 128 Bytes.
 
 \subsection{WiFi Parameters}
-\subsubsection{Encryption}
-The ESP8266 supports several kind of encryption :
+\subsubsection{Router connection}
+It can connect to routers with several security : 
 \begin{itemize}
-\item No encryption
-\item WEP
-\item WPA\_PSK
-\item WPA2\_PSK
-\item WPA\_WPA2\_PSK
-\item WPA2\_Entreprise
+\item \texttt{OPEN},
+\item \texttt{WEP},
+\item \texttt{WPA\_PSK},
+\item \texttt{WPA2\_PSK},
+\item \texttt{WPA\_WPA2\_PSK}.
 \end{itemize}
-
+The connection to routers with the \texttt{WPA2\_Entreprise} security is not available 
+with the current version of the AT command set.\\
 \subsubsection{Connection mode}
 The ESP8266 has three WiFi connection modes :
 \begin{itemize}
-    \item Station mode
-    \item SoftAP mode
-    \item SoftAP + Station mode
+    \item \texttt{Station} mode : Client only
+    \item \texttt{SoftAP} mode : Server only
+    \item \texttt{SoftAP} + \texttt{Station} mode
 \end{itemize}
-It is also capable of DHCP feature when used as server.
 
 \section{Design Choices}
 Here I will show how the extension will look like, see figure \ref{high_level}. It will consist of Four parts:
 \begin{itemize}
-    \item Registers, to store configuration, status and other things,
-    \item A FIFO\_OUT to send data from the CPU to the UART custom interface,
-    \item A FIFO\_IN to receive data from the ESP8266,
-    \item A custom UART interface to communicate to the ESP8266.
+    \item \texttt{Registers}, to store configuration, status and other things,
+    \item A \texttt{FIFO\_OUT} to send data from the CPU to the \texttt{UART} custom interface,
+    \item A \texttt{FIFO\_IN} to receive data from the \texttt{ESP8266},
+    \item A custom \texttt{UART} interface to communicate to the \texttt{ESP8266}.
 \end{itemize}
 \begin{figure}[H]
     \includegraphics[width=.7\linewidth]{ESP8266.jpg}
@@ -168,16 +163,17 @@ Here I will show how the extension will look like, see figure \ref{high_level}. 
 \subsection{Registers}
 The registers will have height registers :
 \begin{itemize}
-    \item A control register CTRL,
-    \item A status register STATUS,
-    \item A register for the UART waiting cycles (depends on the UART rate),
-    \item The FIFO\_out\_data register,
-    \item The FIFO\_out\_free\_space register,
-    \item The FIFO\_in\_data register,
-    \item The FIFO\_in\_pending\_data register.
-    \item The reset\_FIFO\_in register.
+    \item A control register \texttt{CTRL},
+    \item A status register \texttt{STATUS},
+    \item A register for the \texttt{UART} waiting cycles (depends on the \texttt{UART rate}),
+    \item The \texttt{FIFO\_out\_data} register,
+    \item The \texttt{FIFO\_out\_free\_space} register,
+    \item The \texttt{FIFO\_in\_data} register,
+    \item The \texttt{FIFO\_in\_pending\_data} register.
+    \item The \texttt{reset\_FIFO\_in} register.
 \end{itemize}
 Here is the register map in table \ref{reg_map} below.
+\texttt{
 \captionof{table}{Register map of the Registers component.}
 \label{reg_map}
 \centerline{
@@ -222,33 +218,34 @@ i\_dropped & i\_received\\
 \hline
 \end{tabular}
 \end{center}
+}
 The role of each bit is described below :
 \begin{itemize}
     \item 0x00 :
     \begin{itemize}
-        \item UART\_ON : Specifies if the UART will capture or send data or if it will stay off.
-        \item i\_reveived : Specifies if the device can send interrupts request when receiving data from the ESP8266.
-        \item i\_dropped : Specifies if the device can send interrupts request when some data is dropped.
-        \item stop\_bit : Specifies the number of stop bit, '0' for 1, '1' for 2.
-        \item parity\_bit : Specifies the parity bit, "00" for None, "10" for Even and "11" for Odd.
+        \item \texttt{UART\_ON} : Specifies if the \texttt{UART} will capture or send data or if it will stay off.
+        \item \texttt{i\_reveived} : Specifies if the device can send interrupts request when receiving data from the \texttt{ESP8266}.
+        \item \texttt{i\_dropped} : Specifies if the device can send interrupts request when some data is dropped.
+        \item \texttt{stop\_bit} : Specifies the number of stop bit, '0' for 1, '1' for 2.
+        \item \texttt{parity\_bit} : Specifies the parity bit, "00" for \texttt{None}, "10" for \texttt{Even} and "11" for \texttt{Odd}.
     \end{itemize}
     \item 0x04 : 
     \begin{itemize}
-        \item i\_pending : Tells if there is an interrupt waiting to be served by the CPU. The CPU must clear it by software when serving the interrupt. Bit 0 is for i\_received, bit 1 is for i\_dropped. Writing '1' to any of the two bits has no effect.
+        \item \texttt{i\_pending} : Tells if there is an interrupt waiting to be served by the CPU. The CPU must clear it by software when serving the interrupt. Bit 0 is for i\_received, bit 1 is for i\_dropped. Writing '1' to any of the two bits has no effect.
     \end{itemize}
-    \item 0x08 : UART\_wait\_cycles : Specifies to the UART how many cycles it should wait before capturing the values during the transfert. The values to put are described in the table \ref{UART_wait_cycles} below for a 50MHz clock. 
-    \item 0x0C : FIFO\_out\_data : Address to write to send data to the ESP8266 through the FIFO\_out. The write must has the byte\_enable signal equal to "0001".
-    \item 0x10 : FIFO\_out\_free\_space : Number of free words (8 bits) in the FIFO\_out. 
-    \item 0x14 : FIFO\_in\_data : Address to read to receive data from the ESP8266 through the FIFO\_in. 
-    \item 0x18 : FIFO\_out\_free\_space : Number of waiting words (8 bits) in the FIFO\_in. 
+    \item 0x08 : \texttt{UART\_wait\_cycles} : Specifies to the \texttt{UART} how many cycles it should wait before capturing the values during the transfer. The values to put are described in the table \ref{UART_wait_cycles} below for a 50MHz clock. 
+    \item 0x0C : \texttt{FIFO\_out\_data} : Address to write to send data to the \texttt{ESP8266} through the \texttt{FIFO\_out}. The write must has the \texttt{byte\_enable} signal equal to "0001".
+    \item 0x10 : \texttt{FIFO\_out\_free\_space} : Number of free words (8 bits) in the \texttt{FIFO\_out}. 
+    \item 0x14 : \texttt{FIFO\_in\_data} : Address to read to receive data from the \texttt{ESP8266} through the \texttt{FIFO\_in}. 
+    \item 0x18 : \texttt{FIFO\_out\_free\_space} : Number of waiting words (8 bits) in the \texttt{FIFO\_in}. 
     \item 0x1C :
     \begin{itemize}
-        \item Reset\_FIFO\_in : Write only bit to clear the FIFO\_in.
-        \item Reset\_FIFO\_out : Write only bit to clear the FIFO\_out.
+        \item \texttt{Reset\_FIFO\_in} : Write only bit to clear the \texttt{FIFO\_in}.
+        \item \texttt{Reset\_FIFO\_out} : Write only bit to clear the \texttt{FIFO\_out}.
     \end{itemize}
 \end{itemize}
 \newpage
-The value to put in the UART\_wait\_cycles registers depend on the desired UART baud rate, and is computed with the following formula.
+The value to put in the \texttt{UART\_wait\_cycles} registers depend on the desired \texttt{UART baud rate}, and is computed with the following formula.
 \begin{align*}
 wait\_cycles &= \frac{time\_per\_bit}{time\_per\_cycles}\\
 &= \frac{\frac{1}{baud\_rate}}{clk\_period} \\
@@ -288,8 +285,6 @@ UART\_Rate & wait\_cycles value (decimal)\\
 \end{tabular}
 \end{center}
 
-When using autoconnect, the device will simply boot with the last configuration used. When using AT command mode, the CPU will have to initiate itself the connection, and can change modes or settings.
-\\\\
 The ports of the Registers component are described on figure \ref{reg_ports} below.
 \begin{figure}[H]
         \makebox[\textwidth][c]{\includegraphics[width=\textwidth, height=\textheight,keepaspectratio]{registers_ports.png}}
@@ -306,7 +301,7 @@ For the FIFO\_out we will use the FIFO available in the IP catalogue of Quartus 
         \item use\_dw[] (10 bits),
         \item empty,
         \item asynchronous clear; \end{itemize}
-    \item Normal synchronous FIFO mode,
+    \item Show ahead FIFO mode,
     \item Auto memory block type,
     \item No optimisation or circuitry protection.
 \end{itemize}
@@ -358,15 +353,15 @@ The external connectivity of the device is described on table \ref{pinout}.
 \hline
 signal name & connectivity\\
 \hline
-BLT\_RxD & GPIO\_1 8 -- FPGA PIN\_AE22\\
+\texttt{BLT\_RxD} & \texttt{GPIO\_0 23 -- FPGA PIN\_T11}\\
 \hline
-BLT\_TxD & GPIO\_1 6 -- FPGA PIN\_AH24\\
+\texttt{BLT\_TxD} & \texttt{GPIO\_0 25 -- FPGA PIN\_AF6}\\
 \hline
-BLT\_State & \multirow{3}{*}{PCA9673 via Avalon Bus}\\
+\texttt{BLT\_State} & \multirow{3}{*}{\texttt{PCA9673} via Avalon Bus}\\
 \cline{1-1}
-BLT\_EN &\\
+\texttt{BLT\_EN} &\\
 \cline{1-1}
-BLT\_ATSel &\\
+\texttt{BLT\_ATSel} &\\
 \hline
 \end{tabular}
 \end{center}
@@ -377,90 +372,38 @@ This section describes the several states machines used in the extension.
 \subsubsection{Transmitting State Machine}
 The figure \ref{UART_transmit_SM} below describe the state machine used for transmitting data. It consists of 5 states : WAITING, START, SENDING, PARITY and STOP states. It starts at the WAITING states, and wait for data to be available in the FIFO\_out. Once data is available, it issue a read to the FIFO\_out and go to the start states. During the start state, it outputs the '0' value, as specified in the UART protocol, and store the data from the FIFO\_out\_readdata during the first cycle in this state. Once it has waited enough, it goes to sending. During sending state, it will send bit after bit, every time waiting the good amount of time. Oncei all the 8 bit of data are sent, it will either go to STOP if the parity is disabled (Parity\_bit = "00") or to PARITY if it is enable. In the PARITY state, it will output the parity value (odd or even) for the right amount of time, and then go to the STOP state. In the STOP state, it will output 1 or 2 bit at '1', depending on the settings of the Stop\_bit, and then go to the WAITING state, ready to transfer again.
 \begin{figure}[H]
-        \center
-        \makebox[\textwidth][c]{\includegraphics[width=\textwidth, height=\textheight,keepaspectratio]{UART_transmit_SM.png}}
-        \caption{State machine used for sending one word (8 bits) to the ESP8266.}
-        \label{UART_transmit_SM}
+    \center
+    \makebox[\textwidth][c]{\includegraphics[width=\textwidth, height=\textheight,keepaspectratio]{UART_transmit_SM.png}}
+    \caption{State machine used for sending one word (8 bits) to the ESP8266.}
+    \label{UART_transmit_SM}
 \end{figure}
 \subsubsection{Receiving State Machine}
 The figure \ref{UART_receive_SM} below describe the state machine used for receiving data. It has 4 states : WAITING, START, RECEIVING and PARITY. It starts at the WAITING states, and wait until the BLT\_Tx is '0' (start bit). Then we wait for half the cycles to wait in the START state in order to capture each bit in correctly and not just when they are supposed to go up (in order to avoid wrong bits), continuously checking that the start bit is still on (BLT\_Tx = '0'). Then we go to the RECEIVING state, where we wait for a full wait before capturing each bit. There is a transition back to the WAITING state with a big condition, it is to catch an error in the start bit during the first half of the first wait round. Once we received all the bits, we either go to the parity check in the PARITY state if enable or directly to the WAITING state and writing the data to the FIFO\_in if it is not full. If we go to the PARITY state, we check if the parity of the data we received is correct, and if it is we write it to the FIFO\_in if it is not full, and else we discard it. Then we go back to WAITING.
 \begin{figure}[H]
-        \makebox[\textwidth][c]{\includegraphics[width=\textwidth, height=\textheight,keepaspectratio]{UART_receive_SM.png}}
-        \caption{State machine used for receiving one word (8 bits) from the ESP8266.}
-        \label{UART_receive_SM}
+    \makebox[\textwidth][c]{\includegraphics[width=\textwidth, height=\textheight,keepaspectratio]{UART_receive_SM.png}}
+    \caption{State machine used for receiving one word (8 bits) from the ESP8266.}
+    \label{UART_receive_SM}
 \end{figure}
-\newpage
+
 \section{Power consumption}
-The ESP8266 device has a different power consumption depending on its mode and if it is transmitting or receiving data. The values have been measured with a constant 5V input for all the baud rates and it appears that it has no effect on the power consumption. The results can be found on the table \ref{power_consumption} below.
-
-\begin{center}
-\captionof{table}{Power consumption of the ESP8266 device}
-\label{power_consumption}
-\begin{tabular}{|c|c|c|l|}
-\hline
-Mode & I(mA) & P(mW) & Notes\\
-\hline
-Not enable & 5 & 20 & \\
-\hline
-AT command mode & 15 & 65 & Receiving or not has no impact\\
-\hline
-Slave mode not connected & 40 & 200 & \\
-\hline
-Slave mode connected & 20 & 100 & Spikes at 60mA/300mW every 130ms\\
-\hline
-Receiving data & 60-80 & 300-400 & \multirow{2}{*}{Not constant, spikes every 0.5ms}\\
-\cline{1-3}
-Transmitting data & 60-80 & 300-400 & \\
-\hline
-\end{tabular}
-\end{center}
-
-\section{WiFi transfer rate}
-The data transfer rate between the ESP8266 and another WiFi device have been measured. The baud rate has a significant impact on it, especially at low rates. The results are presented below on table \ref{throughput_table} and figure \ref{throughput_fig}.\\
-The data throughput is almost constant when higher than 57600 b/s of baud rate, and the only thing changing is the packet size when above 460800 b/s.
-\begin{center}
-\captionof{table}{Throughput between the ESP8266 and another WiFi device}
-\label{throughput_table}
-\begin{tabular}{|c|c|c|c|}
-\hline
-Baud rate & Useful payload(Byte) & Time between packets(ms) & Throughput(B/s)\\
-\hline
-4800 & 5 & 1.246 & 4012.84 \\
-\hline
-9600 & 10 & 1.251 & 7993.61 \\
-\hline
-19200 & 20 & 1.251 & 15987.21 \\
-\hline
-38400 & 49 & 1.157 & 42350.91 \\
-\hline
-57600 & 54 & 1.132 & 47703.18 \\
-\hline
-115200 & 54 & 1.141 & 47326.91 \\
-\hline
-230400 & 54 & 1.031 & 52376.3 \\
-\hline
-460800 & 127 & 2.507 & 50658.16 \\
-\hline
-921600 & 127 & 2.501 & 50779.69 \\
-\hline
-1382400 & 127 & 2.694 & 47141.8\\
-\hline
-\end{tabular}
-\end{center}
+The \texttt{ESP8266} module specification document has the following table regarding power consumption:
 \begin{figure}[H]
-        \center
-        \makebox[\textwidth][c]{\includegraphics[width=\textwidth, height=\textheight,keepaspectratio]{throughput.png}}
-        \caption{Throughput of the ESP8266 depending on the Baud rates.}
-        \label{throughput_fig}
+    \makebox[\textwidth][c]{\includegraphics[width=\textwidth, height=\textheight,keepaspectratio]{powerConsumption.png}}
+    \caption{Table with the power consumption of the module.}
 \end{figure}
 
-\section{WiFi protocol}
-The ESP8266 uses the L2CAP WiFi protocol to transmit data over a WiFi connection. This protocol supports segmentation and reassembly of packets, with a max packet payload of 64 kB. It also supports flow control and retransmission of packets. In theory, this protocol could also be used to do group-oriented communication, with different communication channels possible, but it is not used by the ESP8266.
-
+\section{Other}
+The \texttt{ESP8266} module has a lot more to offer, since there is a real ARM 32 bit CPU inside with some GPIOs and ADCs for instance. All of that is not accessible as be only use it by UART without any SDKs, only with the AT commands. That way to use the module is sufficient to do some inter FPGA communication, or to access a remote server, but if one wants to use the SPI, ADC or many other things, he will have to flash another firmware with an SDK.
 \newpage
 \begin{appendices}
-
-\includepdf[pages={1}, scale=.82, pagecommand=\section{AT Command Set}]{ESP8266ATCommandsSet.pdf}
+\section{Flashing the ROM}
+In order to use the AT commands, you need to flash the ROM to update the software. This document was written for the version of the software given in archive with this file.\\
+In order to correctly flash your module, please refer to the other pdf "\texttt{Flash\_ESP8266\_WiFi\_module.pdf}".
+\section{AT Commands}
+Below you can find the section from the \texttt{ESP8266} instruction manual regarding the AT commands.
+\includepdf[pages={7-18}, scale=.82, pagecommand={}]{4a-esp8266_at_instruction_set_en.pdf}
+\includepdf[pages={19-40}, scale=.82, pagecommand={}]{4a-esp8266_at_instruction_set_en.pdf}
+\includepdf[pages={41-56}, scale=.82, pagecommand={}]{4a-esp8266_at_instruction_set_en.pdf}
 
 \end{appendices}
 

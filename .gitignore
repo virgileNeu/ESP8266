@@ -1,8 +1,6 @@
-ESP8266-design.aux
-ESP8266-design.log
-ESP8266-design.toc
-Flash_ESP8266_WiFi_module.aux
-Flash_ESP8266_WiFi_module.log
-Flash_ESP8266_WiFi_module.toc
+*.aux
+*.log
+*.toc
+*.out
 *.odp
 *.zip
