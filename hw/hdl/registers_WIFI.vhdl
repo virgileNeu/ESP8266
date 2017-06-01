@@ -102,8 +102,8 @@ begin
                 UART_wait_cycles_reg    <= as_writedata;
             when "111" =>
                 if(as_writedata(0) = '1') then --clear i_pending if reset FIFO_in
-                     i_pending <= "00";
-                 end if;
+                    i_pending <= "00";
+                end if;
             when others => null;
             end case;
         end if;
@@ -117,19 +117,19 @@ begin
         if(as_read = '1') then
             case as_address is
             when "000" =>
-                  as_readdata(5 downto 4) <= parity_reg;
-                  as_readdata(3)          <= stop_bit_reg;
-                  as_readdata(2 downto 1) <= i_enable;
-                  as_readdata(0)          <= UART_on_reg;
+                    as_readdata(5 downto 4) <= parity_reg;
+                    as_readdata(3)          <= stop_bit_reg;
+                    as_readdata(2 downto 1) <= i_enable;
+                    as_readdata(0)          <= UART_on_reg;
             when "001" =>
-                  as_readdata(1 downto 0) <= i_pending;
+                    as_readdata(1 downto 0) <= i_pending;
             when "010" =>
-                  as_readdata             <= UART_wait_cycles_reg;
+                    as_readdata             <= UART_wait_cycles_reg;
             when "100" =>
-                  as_readdata(9 downto 0) <= (9 downto 0 => not FIFO_out_full) and std_logic_vector((9 downto 0 => '1') - unsigned(FIFO_out_use_dw));
+                    as_readdata(9 downto 0) <= (9 downto 0 => not FIFO_out_full) and std_logic_vector((9 downto 0 => '1') - unsigned(FIFO_out_use_dw));
             when "110" =>
-						as_readdata(10)			<= FIFO_in_full;
-                  as_readdata(9 downto 0) <= FIFO_in_use_dw;
+                    as_readdata(10)         <= FIFO_in_full;
+                    as_readdata(9 downto 0) <= FIFO_in_use_dw;
             when others =>
             end case;
         end if;
