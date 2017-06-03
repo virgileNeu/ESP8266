@@ -1,4 +1,17 @@
-library ieee;
+-- #############################################################################
+-- ESP8266_extension.vhd
+--
+-- BOARD         : DE0-Nano-SoC from Terasic
+-- Author        : Virgile Neu
+-- Revision      : 1.0
+-- Creation date : 10/05/2017
+--
+-- Syntax Rule : nGROUP_NAME[bit]
+--
+-- n     : to specify an active-low signal
+-- GROUP : specify the source of the signal (ex: UART, FIFO_in, ...)
+-- NAME  : signal name (ex: write, read, ...)
+-- #############################################################################library ieee;
 use ieee.std_logic_1164.all;
 
 entity ESP8266_extension is

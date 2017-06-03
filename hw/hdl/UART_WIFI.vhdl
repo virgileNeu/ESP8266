@@ -4,9 +4,9 @@
 -- BOARD         : DE0-Nano-SoC from Terasic
 -- Author        : Virgile Neu
 -- Revision      : 1.0
--- Creation date : 21/03/2017
+-- Creation date : 10/05/2017
 --
--- Syntax Rule : GROUP_NAME_N[bit]
+-- Syntax Rule : nGROUP_NAME[bit]
 --
 -- n     : to specify an active-low signal
 -- GROUP : specify the source of the signal (ex: UART, FIFO_in, ...)

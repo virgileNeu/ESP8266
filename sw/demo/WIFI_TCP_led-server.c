@@ -35,7 +35,7 @@ int main() {
 
 	WIFI_set_CTRL(&esp8266, WIFI_UART_ON | WIFI_STOP_0);
 	WIFI_set_baud_rate(&esp8266, b115200);
-	WIFI_reset_FIFO(&esp8266, WIFI_RESET_FIFO_IN | WIFI_RESET_FIFO_OUT);
+	WIFI_reset_FIFO(&esp8266, WIFI_RESET_FIFO_IN | WIFI_RESET_FIFO_OUT | WIFI_NO_PARITY);
 
 	//commands to create the TCP server
 
@@ -46,6 +46,7 @@ int main() {
 		WIFI_get_data_terminator(&esp8266, message);
 		printf("%s",message);
 	} while(strncmp(message, "OK", 2));
+    
 	WIFI_send_command(&esp8266, "AT+CWMODE=3", 11); //allow softAP + station
 	do {
 		WIFI_get_data_terminator(&esp8266, message);
@@ -65,8 +66,6 @@ int main() {
 	scanf("%s", pass);
 	sprintf(message, "AT+CWJAP=\"%s\",\"%s\"", ssid, pass);
 	WIFI_send_command(&esp8266, message, strnlen(message, 100)); //connect to router
-	WIFI_get_data_terminator(&esp8266, message); //the "\r\n" before the answer
-	WIFI_get_data_terminator(&esp8266, message); //the answer
 	do {
 		WIFI_get_data_terminator(&esp8266, message);
 		printf("%s",message);

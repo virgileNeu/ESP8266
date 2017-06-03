@@ -1,10 +1,3 @@
-/*
- * ESP8266.h
- *
- *  Created on: Mar 30, 2017
- *      Author: neu
- */
-
 #ifndef ESP_8266_H_
 #define ESP_8266_H_
 

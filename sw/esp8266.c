@@ -1,10 +1,3 @@
-/*
- * ESP8266.c
- *
- *  Created on: Mar 30, 2017
- *      Author: neu
- */
-
 #include <string.h>
 #include <inttypes.h>
 #include "io.h"

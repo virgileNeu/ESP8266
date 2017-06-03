@@ -4,7 +4,7 @@
 -- BOARD         : DE0-Nano-SoC from Terasic
 -- Author        : Virgile Neu
 -- Revision      : 1.0
--- Creation date : 21/03/2017
+-- Creation date : 10/05/2017
 --
 -- Syntax Rule : nGROUP_NAME[bit]
 --
